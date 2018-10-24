@@ -28,14 +28,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h> /* for read & write */
 #include <linux/i2c-dev.h>
 #include <errno.h>
 
 #include "font8x8.h"
 #include "font5x7.h"
 
-#define SSD1306_Max_X                 127    //128 Pixels
-#define SSD1306_Max_Y                 63     //64  Pixels
+#define SSD1306_Max_X                 128    //128 Pixels
+#define SSD1306_Max_Y                 32     //64  Pixels
 
 #define PAGE_MODE                     01
 #define HORIZONTAL_MODE               02
@@ -89,7 +90,7 @@ void SSD1306_sendCommand(unsigned char command);
 void SSD1306_sendData(unsigned char Data);
 
 void SSD1306_setPageMode();
-void SSD1306_setHorizontalMode();
+void SSD1306_setVerticalMode();
 
 void SSD1306_setTextXY(unsigned char Row, unsigned char Column);
 void SSD1306_clearDisplay();

@@ -31,42 +31,49 @@ void SSD1306_init(void)
 	}
 
 	SSD1306_sendCommand(0xAE);            //display off
-	SSD1306_sendCommand(0xA6);            //Set Normal Display (default)
-	SSD1306_sendCommand(0xAE);            //DISPLAYOFF
+
+	SSD1306_sendCommand(0x40|0x0);        //Set Display start line
+  SSD1306_sendCommand(0xB0|0x0);        //Set Page Start Address for Page Addressing Mode
+
+  SSD1306_sendCommand(0xC8);            //C0/C8, Set COM Output Scan Direction
+
+  SSD1306_sendCommand(0x81);            //SETCONTRAST
+  SSD1306_sendCommand(0xFF);            // ---
+
+  SSD1306_sendCommand(0xA1);            //SEGREMAP   Mirror screen horizontally (A0)
+  SSD1306_sendCommand(0xA6);            //Set Normal Display (default)
+
+  SSD1306_sendCommand(0xA8);            //SSD1306_SETMULTIPLEX
+  SSD1306_sendCommand(0x1F);            // ---
+
+	SSD1306_sendCommand(0xD3);            //SET DISPLAY OFFSET
+	SSD1306_sendCommand(0x00);            // ---
+
 	SSD1306_sendCommand(0xD5);            //SETDISPLAYCLOCKDIV
-	SSD1306_sendCommand(0x80);            // the suggested ratio 0x80
-	SSD1306_sendCommand(0xA8);            //SSD1306_SETMULTIPLEX
-	SSD1306_sendCommand(0x3F);
-	SSD1306_sendCommand(0xD3);            //SETDISPLAYOFFSET
-	SSD1306_sendCommand(0x0);             //no offset
-	SSD1306_sendCommand(0x40|0x0);        //SETSTARTLINE
-	SSD1306_sendCommand(0x8D);            //CHARGEPUMP
+  SSD1306_sendCommand(0xF0);
+
+  SSD1306_sendCommand(0xD9);            //SETPRECHARGE
+  SSD1306_sendCommand(0x22);
+
+  SSD1306_sendCommand(0xDA);            //0xDA
+	SSD1306_sendCommand(0x02);            //COMSCANDEC
+
+  SSD1306_sendCommand(0xDB);            //SETVCOMDETECT
+	SSD1306_sendCommand(0x49);
+
+  SSD1306_sendCommand(0x8D);            //CHARGEPUMP
 	SSD1306_sendCommand(0x14);
-	SSD1306_sendCommand(0x20);            //MEMORYMODE
-	SSD1306_sendCommand(0x00);            //0x0 act like ks0108
-	SSD1306_sendCommand(0xA1);            //SEGREMAP   Mirror screen horizontally (A0)
-	SSD1306_sendCommand(0xC8);            //COMSCANDEC Rotate screen vertically (C0)
-	SSD1306_sendCommand(0xDA);            //0xDA
-	SSD1306_sendCommand(0x12);            //COMSCANDEC
-	SSD1306_sendCommand(0x81);            //SETCONTRAST
-	SSD1306_sendCommand(0xCF);            //
-	SSD1306_sendCommand(0xd9);            //SETPRECHARGE 
-	SSD1306_sendCommand(0xF1); 
-	SSD1306_sendCommand(0xDB);            //SETVCOMDETECT                
-	SSD1306_sendCommand(0x40);
-	SSD1306_sendCommand(0xA4);            //DISPLAYALLON_RESUME        
-	SSD1306_sendCommand(0xA6);            //NORMALDISPLAY             
+
+	SSD1306_sendCommand(0xAF);
+
 	SSD1306_clearDisplay();
-	SSD1306_sendCommand(0x2E);            //Stop scroll
-	SSD1306_sendCommand(0x20);            //Set Memory Addressing Mode
-	SSD1306_sendCommand(0x00);            //Set Memory Addressing Mode ab Horizontal addressing mode
 	SSD1306_setFont(font8x8);
 }
 
 void SSD1306_setFont(const uint8_t* font)
 {
   m_font = font;
-  m_font_width = pgm_read_byte(&m_font[0]);
+  m_font_width = m_font[0];
 }
 
 void SSD1306_sendCommand(unsigned char command)
@@ -86,7 +93,7 @@ void SSD1306_setBrightness(unsigned char Brightness)
    SSD1306_sendCommand(Brightness);
 }
 
-void SSD1306_setHorizontalMode()
+void SSD1306_setVerticalMode()
 {
     addressingMode = HORIZONTAL_MODE;
     SSD1306_sendCommand(0x20);                      //set addressing mode
@@ -149,7 +156,7 @@ int SSD1306_putChar(unsigned char ch)
     for(i=0;i<m_font_width;i++)
     {
        // Font array starts at 0, ASCII starts at 32
-       SSD1306_sendData(pgm_read_byte(&m_font[(ch-32)*m_font_width+m_font_offset+i])); 
+       SSD1306_sendData(m_font[(ch-32)*m_font_width+m_font_offset+i]); 
     }
 }
 
@@ -235,24 +242,24 @@ unsigned char SSD1306_putFloat(float floatNumber,unsigned char decimal)
   return f;
 }
 
-void SSD1306_drawBitmap(unsigned char *bitmaparray,int bytes)
+void SSD1306_drawBitmap(unsigned char *bitmaparray, int bytes)
 {
   char localAddressMode = addressingMode;
   if(addressingMode != HORIZONTAL_MODE)
   {
-      //Bitmap is drawn in horizontal mode     
-      SSD1306_setHorizontalMode();
+    //Bitmap is drawn in horizontal mode
+    SSD1306_setVerticalMode();
   }
   int i=0;
   for(i=0;i<bytes;i++)
   {
-      SSD1306_sendData(pgm_read_byte(&bitmaparray[i]));
+    SSD1306_sendData(bitmaparray[i]);
   }
 
   if(localAddressMode == PAGE_MODE)
   {
-     //If pageMode was used earlier, restore it.
-     SSD1306_setPageMode(); 
+    //If pageMode was used earlier, restore it.
+    SSD1306_setPageMode();
   }
   
 }
